@@ -10,7 +10,7 @@
     "next-auth",
     "vercel"
   ],
-  "url": "",
+  "url": "https://trip-friend.vercel.app",
   "tags": [
     "Travel"
   ],
