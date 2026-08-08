@@ -1,0 +1,19 @@
+{
+  "name": "trip-friend",
+  "title": "Trip Friend",
+  "description": "A travel AI that understands how you like to travel—not just where you want to go—and continuously plans, optimizes and adapts your vacation around you.",
+  "stack": [
+    "next",
+    "typescript",
+    "neon",
+    "drizzle",
+    "next-auth",
+    "vercel"
+  ],
+  "url": "",
+  "tags": [
+    "Travel"
+  ],
+  "status": "active",
+  "private": false
+}
