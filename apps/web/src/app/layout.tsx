@@ -6,8 +6,8 @@ import "@werft/tokens/tokens.css"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "Werft app",
-  description: "Scaffolded from werft-template",
+  title: "Trip Friend",
+  description: "Tell me how you want your vacation to feel, and I'll figure out the trip.",
 }
 
 export const viewport: Viewport = {

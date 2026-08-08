@@ -21,6 +21,12 @@ main {
   padding: var(--space-12) var(--space-6);
 }
 
+/* An itinerary is a wide document — a timeline, a map and a budget table all
+   read badly in a 40rem column. The login page keeps the narrow default. */
+main.wide {
+  max-width: 60rem;
+}
+
 h1 {
   margin: 0 0 var(--space-6);
   font-size: var(--font-size-2xl);
@@ -94,4 +100,454 @@ button:active {
   background: var(--color-surface);
   border: 1px solid var(--color-danger);
   border-radius: var(--radius-md);
+}
+
+/* ---------------------------------------------------------------------------
+   Trip Friend
+   ---------------------------------------------------------------------------
+   Everything below is the planner's own furniture. Same rule as above: no
+   literal colours, spacing or font sizes — a token or nothing. The only bare
+   lengths here are layout measures (column widths, a timeline gutter) that
+   describe the shape of the page rather than its rhythm, matching the
+   `max-width: 40rem` the template already sets on `main`.
+   --------------------------------------------------------------------------- */
+
+h2 {
+  margin: var(--space-8) 0 var(--space-3);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+}
+
+h3 {
+  margin: var(--space-6) 0 var(--space-2);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+}
+
+a {
+  color: var(--color-accent);
+}
+
+.muted {
+  color: var(--color-muted);
+}
+
+.small {
+  font-size: var(--font-size-sm);
+}
+
+.numeric {
+  font-family: var(--font-family-mono);
+  text-align: right;
+}
+
+.lede {
+  font-size: var(--font-size-lg);
+  color: var(--color-muted);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.site-header {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--space-4);
+  margin-bottom: var(--space-8);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.nav-actions {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+button.ghost {
+  color: var(--color-muted);
+  background: transparent;
+  border: 1px solid var(--color-border);
+}
+
+button.cta {
+  padding: var(--space-3) var(--space-6);
+  font-size: var(--font-size-lg);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.hero {
+  padding: var(--space-8) 0 var(--space-12);
+}
+
+.hero h1 {
+  max-width: 20ch;
+}
+
+.trip-list {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.trip-list li {
+  display: flex;
+  gap: var(--space-4);
+  align-items: baseline;
+  justify-content: space-between;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* --- conversation ------------------------------------------------------- */
+
+.progress {
+  font-size: var(--font-size-sm);
+  color: var(--color-muted);
+}
+
+.chat {
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.chat-log {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-height: 28rem;
+  overflow-y: auto;
+}
+
+.bubble {
+  max-width: 46ch;
+  padding: var(--space-3) var(--space-4);
+  margin: 0;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.bubble-user {
+  align-self: flex-end;
+  color: var(--color-bg);
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: var(--space-4) 0;
+}
+
+button.choice {
+  color: var(--color-fg);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+}
+
+button.choice:hover {
+  border-color: var(--color-accent);
+}
+
+button.choice-selected {
+  color: var(--color-bg);
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+button.choice-confirm {
+  color: var(--color-bg);
+  background: var(--color-success);
+  border-color: var(--color-success);
+}
+
+.chat-entry {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  margin-top: var(--space-4);
+}
+
+/* --- itinerary ---------------------------------------------------------- */
+
+.trip-header {
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: var(--space-4) 0 var(--space-8);
+}
+
+.tab {
+  padding: var(--space-2) var(--space-4);
+  color: var(--color-muted);
+  text-decoration: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+}
+
+.tab-current {
+  color: var(--color-bg);
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  margin: var(--space-2) 0;
+}
+
+.badge {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-muted);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+}
+
+.badge-warn {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
+.day {
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.timeline {
+  padding: 0;
+  margin: var(--space-4) 0;
+  list-style: none;
+  /* The spine the day hangs off. */
+  border-left: 2px solid var(--color-border);
+}
+
+.timeline-item {
+  position: relative;
+  display: flex;
+  gap: var(--space-4);
+  padding: var(--space-3) 0 var(--space-3) var(--space-6);
+}
+
+.timeline-item::before {
+  position: absolute;
+  left: calc(var(--space-1) * -1);
+  width: var(--space-2);
+  height: var(--space-2);
+  content: "";
+  background: var(--color-accent);
+  border-radius: var(--radius-full);
+}
+
+.timeline-time {
+  min-width: 4rem;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-sm);
+  color: var(--color-muted);
+}
+
+.timeline-body {
+  flex: 1;
+}
+
+.timeline-title {
+  margin: 0;
+  font-weight: var(--font-weight-medium);
+}
+
+.timeline-body p {
+  margin: var(--space-1) 0;
+}
+
+.why {
+  padding-left: var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-muted);
+  border-left: 2px solid var(--color-accent);
+}
+
+.alternatives {
+  margin-top: var(--space-2);
+  font-size: var(--font-size-sm);
+}
+
+.alternatives summary,
+.match summary {
+  cursor: pointer;
+  color: var(--color-accent);
+}
+
+.match {
+  margin-top: var(--space-3);
+}
+
+/* --- map ---------------------------------------------------------------- */
+
+.map-svg {
+  width: 100%;
+  height: auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.map-route {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+  stroke-linejoin: round;
+}
+
+.map-pin {
+  fill: var(--color-accent);
+}
+
+.map-pin-label {
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  fill: var(--color-bg);
+}
+
+.map-lodging {
+  fill: var(--color-success);
+}
+
+.map-key {
+  padding-left: var(--space-6);
+  font-size: var(--font-size-sm);
+}
+
+.map-key-number {
+  display: inline-block;
+  min-width: var(--space-4);
+  font-family: var(--font-family-mono);
+  color: var(--color-accent);
+}
+
+/* --- budget, bookings, summary ------------------------------------------ */
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.table tfoot th,
+.table tfoot td {
+  border-top: 2px solid var(--color-border);
+  border-bottom: none;
+}
+
+.cost-days {
+  padding: 0;
+  list-style: none;
+}
+
+.cost-days li {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-1) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.checklist {
+  padding: 0;
+  list-style: none;
+}
+
+.checklist li {
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.cards {
+  display: grid;
+  gap: var(--space-4);
+  padding: 0;
+  list-style: none;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+}
+
+.card {
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.card h3 {
+  margin-top: 0;
+}
+
+.summary {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-4) 0;
+  grid-template-columns: 1fr;
+}
+
+.summary div {
+  display: flex;
+  gap: var(--space-4);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.summary dt {
+  min-width: 10rem;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-muted);
+}
+
+.summary dd {
+  margin: 0;
+}
+
+.ready,
+.assistant {
+  padding: var(--space-4);
+  margin-top: var(--space-8);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.day-nav {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--space-8);
 }
