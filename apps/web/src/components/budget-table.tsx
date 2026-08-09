@@ -1,6 +1,6 @@
 import type { Itinerary } from "@/ai/itinerary"
 import { budgetTotal, dayCost } from "@/ai/itinerary"
-import { money } from "@/components/timeline"
+import { money } from "@/lib/format"
 
 /**
  * The budget (section 25), with its uncertainty range.

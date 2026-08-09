@@ -307,6 +307,14 @@ button.choice-confirm {
   border-radius: var(--radius-full);
 }
 
+/* Pushed to the end of the row: it is an action, not one of the views, and a
+   reader scanning the tabs should not have to step over it to reach Bookings. */
+.tab-download {
+  margin-inline-start: auto;
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
 .tab-current {
   color: var(--color-bg);
   background: var(--color-accent);

@@ -118,3 +118,100 @@ is not "sharing is broken" but "the exemption is wider than intended".
 - Unmeasured: how good the itineraries actually are. Every judgement in
   `prompts.ts` — group by geography, day one is arrival, build in rest — is
   asserted, not tested. The first real trip planned with this is the test.
+
+---
+
+## Download the itinerary as a PDF
+
+**Asked:** issue #4, "add an option to download the itenary as pdf".
+
+**Changed:** a PDF writer and two routes that serve one.
+
+- `src/pdf/text.ts` — the boundary between the app's strings and the bytes a
+  page's content stream can hold: WinAnsi encoding, Helvetica's own width
+  tables for both weights, and word wrap that measures with them.
+- `src/pdf/document.ts` — `PdfWriter`: pages, a cursor that breaks pages when
+  a block will not fit, paragraphs, right-aligned rows, rules and bands, and
+  the serializer that turns it all into a cross-referenced PDF 1.4 file.
+- `src/pdf/itinerary.ts` — the layout: title and match, an "at a glance" list
+  of the days, every day in full with its timeline, the budget, lodging,
+  packing list and pre-departure checklist.
+- `src/pdf/response.ts` — the shared `Content-Disposition: attachment`
+  response, so the two routes cannot drift into serving different documents.
+- `src/app/trips/[id]/itinerary.pdf/route.ts` (gated, re-checks the session,
+  writes a `trip_exported` audit row) and `src/app/s/[token]/itinerary.pdf/`
+  (public on the share token's terms, no audit row).
+- A "Download PDF" link at the end of the itinerary's tab row, which follows
+  `basePath` and so works unchanged on the shared copy.
+- `src/lib/format.ts` — `minutes` and `money` moved out of `timeline.tsx`, now
+  that something other than a component needs them.
+- 28 unit tests across the encoder and the document, and two smoke tests: the
+  gated PDF redirects a signed-out visitor to login, and the shared one 404s
+  for a token that is not a token.
+
+**Decided:**
+
+- *Write the PDF by hand.* No PDF library is blessed in AGENTS.md, and adding
+  one is a decision to raise, not to take quietly while implementing a feature
+  request. Writing it is a couple of hundred lines because the document needs
+  no images, no transparency and no font embedding — and it means the output
+  is exactly as good as the layout we ask for.
+- *Standard fonts, WinAnsi, and honest loss.* Helvetica is drawn through an
+  8-bit encoding. Latin-1 and the model's own typography survive; accents
+  outside it transliterate (Rīga → Riga); emoji and CJK are dropped rather
+  than replaced with "?", because a reader can tell something is missing but
+  cannot tell that a "?" was not in the original.
+- *Real font metrics, not estimated ones.* Widths come from Helvetica's own
+  tables. An estimate holds until a line of capitals measures 15% short and
+  runs off the page — which is exactly the text that appears in a title.
+- *A route handler, not a server action.* This returns a file; the browser's
+  own download machinery does that better than anything the app could do with
+  a blob, and it costs no JavaScript.
+- *The share link gets one too.* The point of sharing is that the people you
+  are travelling with can use the trip, and they are the ones who want a copy
+  to carry. It is the same document, on the same terms as the page.
+- *No audit row for the public download.* `/s/` is the only route a stranger
+  can reach; writing a row per request there is a way to fill a table from
+  outside. The operator's own download is recorded.
+- *Print everything the screen hides.* Alternatives are collapsed on screen
+  and printed in full: they are what makes a paper itinerary usable when
+  something is shut or rained off.
+
+**Rejected:**
+
+- *Adding `pdfkit`, `jspdf` or `@react-pdf/renderer`.* Not blessed. Each also
+  brings a font pipeline and a rendering model to keep up to date, for a
+  document that is text in one column.
+- *`window.print()` with a print stylesheet.* No dependency either, but it is
+  not a download — it hands the user a browser dialogue and hopes they choose
+  "Save as PDF", and what it saves is the tab layout, the collapsed details
+  and all.
+- *Rendering the map into the PDF.* The SVG projection has no streets; on
+  paper, without the app beside it, a page of unlabelled dots is decoration.
+- *A `?format=pdf` query on the trip page.* A file and a page are different
+  kinds of thing; giving the file its own URL means it can be linked, and
+  keeps the page's caching and error behaviour out of it.
+
+**Verified:** honestly, not as far as it should be. This session ran in a
+sandbox where `pnpm` was unavailable and node could not be executed, so
+`pnpm build`, `pnpm test`, `pnpm typecheck` and `pnpm lint` were **not run
+locally** — the first real run of any of them is `pr-checks.yml` on this PR,
+which is a gate this session did not clear by hand. The tests were written to
+check the parts a viewer refuses on rather than "does it look right": the
+header and trailer, an xref entry per object, every offset landing on the
+object it claims, every `/Length` landing exactly on its `endstream`, and the
+page count matching the page objects. Nobody has yet opened one of these files
+in a PDF viewer.
+
+**Open:**
+
+- No one has looked at the output in a reader. The structural tests say it is
+  a valid PDF; they say nothing about whether the day headings land well or
+  the timeline column is wide enough.
+- Non-Latin place names are missing from the printed copy while present on
+  screen. Fixing that means an embedded font and a CID encoder — larger than
+  everything in `src/pdf/` put together.
+- No page-break control beyond "does this block fit": a day can still split
+  across a page boundary in an ugly place.
+- Streams are uncompressed. Fine at a few hundred kilobytes; worth revisiting
+  if a PDF ever gets big enough to notice.

@@ -8,6 +8,7 @@ export type AuditKind =
   | "trip_planned"
   | "trip_revised"
   | "trip_deleted"
+  | "trip_exported"
   | "plan_failed"
 
 /**

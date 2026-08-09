@@ -50,10 +50,13 @@ Three tables. `audit_log` came with the template; the other two arrived in
 `0001_conscious_shotgun.sql`.
 
 **`audit_log`** (`0000_audit_log.sql`) — append-only events. This app adds
-`trip_started`, `trip_planned`, `trip_revised`, `trip_deleted` and
-`plan_failed` to the template's sign-in kinds. `plan_failed` is the one that
-earns its keep: gateway failures are otherwise invisible, because they are
-handled gracefully in the UI.
+`trip_started`, `trip_planned`, `trip_revised`, `trip_deleted`,
+`trip_exported` and `plan_failed` to the template's sign-in kinds.
+`plan_failed` is the one that earns its keep: gateway failures are otherwise
+invisible, because they are handled gracefully in the UI. `trip_exported` is
+written only for the operator's own PDF download — never for a share link's,
+because a public URL that writes a row per request is a way to fill a table
+from outside.
 
 **`trip`** (`0001`) — `id`, `created_at`, `updated_at`, `title`, `phase`,
 `share_token` (unique), and three `jsonb` columns: `brief`, `shortlist`,
@@ -86,7 +89,9 @@ Everything is behind the operator gate except `/s/[token]`.
 | `/` | Hero, "Plan my trip", and the list of saved trips. |
 | `/trips/[id]` | The trip. Renders by phase: the intake conversation, then the shortlist and overview, then the itinerary with its tabs and the trip assistant. `?tab=itinerary\|map\|budget\|bookings`. |
 | `/trips/[id]/day/[day]` | One day in full — descriptions, reasons, alternatives, and a map of just that day. |
+| `/trips/[id]/itinerary.pdf` | The itinerary as a downloadable PDF. Route handler, not a page; re-checks the session itself. |
 | `/s/[token]` | **Public.** A read-only itinerary. Exempted in `src/proxy.ts`. |
+| `/s/[token]/itinerary.pdf` | **Public.** The same PDF, on the same terms as the page it hangs off. |
 | `/login`, `/api/auth/*` | The template's gate, unchanged. |
 
 Server actions, all in `src/trips/actions.ts`, all re-checking the session
@@ -173,6 +178,28 @@ read-only, 404 for anything unfinished — and shape-checked before the query, s
 junk in the URL costs a regex rather than a database round trip. This is the
 only route an unauthenticated stranger can make the app do work on.
 
+**The PDF is written by hand, not by a library.** No PDF library is on
+AGENTS.md's blessed list, and adding one is a decision to raise rather than
+take quietly. It turns out not to be much of a sacrifice: a printable document
+with the standard fonts, no images and no transparency is a couple of hundred
+lines of a format that has been stable since 1993. `src/pdf/` is three pieces —
+`text.ts` (WinAnsi encoding, Helvetica's own width tables, word wrap),
+`document.ts` (pages, a cursor, and the byte serializer), `itinerary.ts` (the
+layout). The whole file is assembled as a string of one byte per character so
+that a cross-reference offset is a string index; mixing in a `Uint8Array`
+partway would mean two ideas of "how long is this so far", and the xref table
+is unforgiving about which one is right.
+
+**The printed itinerary is a different document from the screen one.** The web
+version has tabs, links into a day and `<details>` a reader can open; none of
+that survives printing. The PDF is linear, with everything visible — an "at a
+glance" list of days at the front, then every day in full including the
+alternatives the screen keeps collapsed, then the budget, lodging, packing list
+and checklist. It is written to be carried: a traveller with no signal should
+be able to read the day off a folded sheet. The map is the one thing left
+behind; dots without streets are a navigational aid only next to a phone, and a
+phone can open the app.
+
 **Design tokens only.** No literal colour, spacing or font value in
 `globals.css`. The bare lengths that remain are layout measures — column
 widths, the timeline gutter — matching the `max-width: 40rem` the template
@@ -208,6 +235,20 @@ doing, not yet done.
 
 **No collaborative planning, no during-trip companion, no photo album** (§35).
 Those are the product's stated destination, not the MVP.
+
+**The PDF cannot draw what Helvetica cannot.** The standard fonts are drawn
+through an 8-bit encoding, so the printed copy holds Latin-1 and the typography
+the model actually writes (curly quotes, dashes, ellipses), transliterates
+accents outside it — Rīga prints as Riga — and drops emoji and non-Latin
+scripts entirely rather than substituting a "?" for them. A place name given
+only in Japanese is therefore missing from the PDF while present on screen.
+Fixing it means embedding a font with a wide repertoire and writing a CID
+encoder, which is a much larger piece of work than everything in `src/pdf/`
+put together.
+
+**The PDF is uncompressed and has no map.** A three-week itinerary is a few
+hundred kilobytes, which is nothing to download and a great deal easier to
+debug than a Flate stream. The map is left out on purpose (see above).
 
 **No test covers the Drizzle queries.** Mocking Drizzle would only assert that
 the mock was called. The queries are exercised for real against the PR's own
