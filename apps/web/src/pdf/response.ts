@@ -15,8 +15,13 @@ import { itineraryFilename, itineraryPdf } from "@/pdf/itinerary"
 export function itineraryPdfResponse(itinerary: Itinerary): Response {
   const bytes = itineraryPdf(itinerary)
   const filename = itineraryFilename(itinerary)
+  // `itineraryPdf` returns a `Uint8Array<ArrayBufferLike>`; `BodyInit` only
+  // accepts one backed by a real `ArrayBuffer`. A `Blob` copies the bytes and
+  // is unconditionally `BodyInit`, so it sidesteps the distinction instead of
+  // asserting it away.
+  const body = new Blob([bytes], { type: "application/pdf" })
 
-  return new Response(bytes, {
+  return new Response(body, {
     headers: {
       "content-type": "application/pdf",
       "content-length": String(bytes.byteLength),
