@@ -34,6 +34,25 @@ test("the share route is reachable without a session, and empty without a token"
   expect(response?.status()).toBe(404)
 })
 
+test("the PDF download is behind the same gate as the trip it belongs to", async ({ page }) => {
+  // A file route is the easiest kind to leave open by accident: nothing about
+  // it renders, so nobody notices it answering. This is the check that the
+  // proxy's matcher still covers a route added after it was written.
+  await page.goto("/trips/00000000-0000-4000-8000-000000000000/itinerary.pdf")
+
+  await expect(page).toHaveURL(/\/login/)
+})
+
+test("the shared PDF is public, and 404s without a real token", async ({ page }) => {
+  // The share exemption is a prefix, so it covers this route too — deliberately,
+  // because the people you are travelling with are the ones who want a printed
+  // copy. What it must not do is hand one out for a token that is not a token.
+  const response = await page.goto("/s/not-a-real-token/itinerary.pdf")
+
+  expect(page.url()).not.toContain("/login")
+  expect(response?.status()).toBe(404)
+})
+
 test("the login page is styled by the token stylesheet", async ({ page }) => {
   await page.goto("/login")
 

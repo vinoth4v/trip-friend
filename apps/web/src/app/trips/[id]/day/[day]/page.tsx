@@ -1,7 +1,8 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { dayCost } from "@/ai/itinerary"
-import { DayBadges, money, Timeline } from "@/components/timeline"
+import { DayBadges, Timeline } from "@/components/timeline"
+import { money } from "@/lib/format"
 import { TripMap } from "@/components/trip-map"
 import { getTrip } from "@/trips/store"
 

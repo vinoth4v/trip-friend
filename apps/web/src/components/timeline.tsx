@@ -1,5 +1,6 @@
 import type { ItineraryDay, ItineraryItem } from "@/ai/itinerary"
 import { dayCost, dayEffortMinutes } from "@/ai/itinerary"
+import { minutes, money } from "@/lib/format"
 
 /**
  * A day as a vertical timeline (section 21).
@@ -104,17 +105,4 @@ export function DayBadges({ day, currency }: { day: ItineraryDay; currency: stri
 
 export function Badge({ children, tone }: { children: React.ReactNode; tone?: "warn" }) {
   return <span className={tone === "warn" ? "badge badge-warn" : "badge"}>{children}</span>
-}
-
-export function minutes(total: number): string {
-  if (total < 60) return `${total} min`
-  const hours = Math.floor(total / 60)
-  const rest = total % 60
-  return rest === 0 ? `${hours} h` : `${hours} h ${rest} min`
-}
-
-/** Currency codes rather than symbols: the model returns "EUR", and a lookup
- * table of symbols would be wrong for exactly the currencies nobody tests. */
-export function money(amount: number, currency: string): string {
-  return `${currency} ${Math.round(amount).toLocaleString("en-GB")}`
 }

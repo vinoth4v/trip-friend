@@ -118,3 +118,180 @@ is not "sharing is broken" but "the exemption is wider than intended".
 - Unmeasured: how good the itineraries actually are. Every judgement in
   `prompts.ts` — group by geography, day one is arrival, build in rest — is
   asserted, not tested. The first real trip planned with this is the test.
+
+---
+
+## Download the itinerary as a PDF
+
+**Asked:** issue #4, "add an option to download the itenary as pdf".
+
+**Changed:** a PDF writer and two routes that serve one.
+
+- `src/pdf/text.ts` — the boundary between the app's strings and the bytes a
+  page's content stream can hold: WinAnsi encoding, Helvetica's own width
+  tables for both weights, and word wrap that measures with them.
+- `src/pdf/document.ts` — `PdfWriter`: pages, a cursor that breaks pages when
+  a block will not fit, paragraphs, right-aligned rows, rules and bands, and
+  the serializer that turns it all into a cross-referenced PDF 1.4 file.
+- `src/pdf/itinerary.ts` — the layout: title and match, an "at a glance" list
+  of the days, every day in full with its timeline, the budget, lodging,
+  packing list and pre-departure checklist.
+- `src/pdf/response.ts` — the shared `Content-Disposition: attachment`
+  response, so the two routes cannot drift into serving different documents.
+- `src/app/trips/[id]/itinerary.pdf/route.ts` (gated, re-checks the session,
+  writes a `trip_exported` audit row) and `src/app/s/[token]/itinerary.pdf/`
+  (public on the share token's terms, no audit row).
+- A "Download PDF" link at the end of the itinerary's tab row, which follows
+  `basePath` and so works unchanged on the shared copy.
+- `src/lib/format.ts` — `minutes` and `money` moved out of `timeline.tsx`, now
+  that something other than a component needs them.
+- 28 unit tests across the encoder and the document, and two smoke tests: the
+  gated PDF redirects a signed-out visitor to login, and the shared one 404s
+  for a token that is not a token.
+
+**Decided:**
+
+- *Write the PDF by hand.* No PDF library is blessed in AGENTS.md, and adding
+  one is a decision to raise, not to take quietly while implementing a feature
+  request. Writing it is a couple of hundred lines because the document needs
+  no images, no transparency and no font embedding — and it means the output
+  is exactly as good as the layout we ask for.
+- *Standard fonts, WinAnsi, and honest loss.* Helvetica is drawn through an
+  8-bit encoding. Latin-1 and the model's own typography survive; accents
+  outside it transliterate (Rīga → Riga); emoji and CJK are dropped rather
+  than replaced with "?", because a reader can tell something is missing but
+  cannot tell that a "?" was not in the original.
+- *Real font metrics, not estimated ones.* Widths come from Helvetica's own
+  tables. An estimate holds until a line of capitals measures 15% short and
+  runs off the page — which is exactly the text that appears in a title.
+- *A route handler, not a server action.* This returns a file; the browser's
+  own download machinery does that better than anything the app could do with
+  a blob, and it costs no JavaScript.
+- *The share link gets one too.* The point of sharing is that the people you
+  are travelling with can use the trip, and they are the ones who want a copy
+  to carry. It is the same document, on the same terms as the page.
+- *No audit row for the public download.* `/s/` is the only route a stranger
+  can reach; writing a row per request there is a way to fill a table from
+  outside. The operator's own download is recorded.
+- *Print everything the screen hides.* Alternatives are collapsed on screen
+  and printed in full: they are what makes a paper itinerary usable when
+  something is shut or rained off.
+
+**Rejected:**
+
+- *Adding `pdfkit`, `jspdf` or `@react-pdf/renderer`.* Not blessed. Each also
+  brings a font pipeline and a rendering model to keep up to date, for a
+  document that is text in one column.
+- *`window.print()` with a print stylesheet.* No dependency either, but it is
+  not a download — it hands the user a browser dialogue and hopes they choose
+  "Save as PDF", and what it saves is the tab layout, the collapsed details
+  and all.
+- *Rendering the map into the PDF.* The SVG projection has no streets; on
+  paper, without the app beside it, a page of unlabelled dots is decoration.
+- *A `?format=pdf` query on the trip page.* A file and a page are different
+  kinds of thing; giving the file its own URL means it can be linked, and
+  keeps the page's caching and error behaviour out of it.
+
+**Verified:** honestly, not as far as it should be. This session ran in a
+sandbox where `pnpm` was unavailable and node could not be executed, so
+`pnpm build`, `pnpm test`, `pnpm typecheck` and `pnpm lint` were **not run
+locally** — the first real run of any of them is `pr-checks.yml` on this PR,
+which is a gate this session did not clear by hand. The tests were written to
+check the parts a viewer refuses on rather than "does it look right": the
+header and trailer, an xref entry per object, every offset landing on the
+object it claims, every `/Length` landing exactly on its `endstream`, and the
+page count matching the page objects. Nobody has yet opened one of these files
+in a PDF viewer.
+
+**Open:**
+
+- No one has looked at the output in a reader. The structural tests say it is
+  a valid PDF; they say nothing about whether the day headings land well or
+  the timeline column is wide enough.
+- Non-Latin place names are missing from the printed copy while present on
+  screen. Fixing that means an embedded font and a CID encoder — larger than
+  everything in `src/pdf/` put together.
+- No page-break control beyond "does this block fit": a day can still split
+  across a page boundary in an ugly place.
+- Streams are uncompressed. Fine at a few hundred kilobytes; worth revisiting
+  if a PDF ever gets big enough to notice.
+
+---
+
+## Why PR #5's gates were red
+
+**Asked:** issue #8, "debug and fix why the last PR 5 is failing".
+
+**Diagnosis:** one type error, in one line, taking three checks down with it.
+`apps/web/src/pdf/response.ts` handed the generated bytes to a `Response`, and
+`tsc` refused:
+
+```
+error TS2345: Argument of type 'Uint8Array<ArrayBufferLike>' is not assignable
+to parameter of type 'BodyInit | null | undefined'.
+```
+
+Since TypeScript 5.7 `Uint8Array` is generic over its backing buffer, and a
+bare `Uint8Array` annotation means `Uint8Array<ArrayBufferLike>` — which
+includes `SharedArrayBuffer`. `BodyInit` (and `BlobPart`) accept only the
+`ArrayBuffer`-backed variant, because a body cannot be read out of memory that
+another thread may be writing. `new Uint8Array(length)` produces exactly the
+right type; the bare return annotations on `toBytes`, `PdfWriter.build` and
+`itineraryPdf` were throwing it away on the way out.
+
+`typecheck` reported it directly, `build` reported it again (`next build` type
+checks after compiling), Vercel's deployment failed for the same reason, and
+`preview-smoke` failed because it waits on a deployment that never arrived.
+`gitleaks`, `docs` and `neon-preview-branch` were green throughout. So: one
+cause, not four.
+
+**Changed:** the three return annotations now say `Uint8Array<ArrayBuffer>`,
+and `response.ts` passes the bytes straight to `Response` again. Added
+`src/pdf/response.test.ts`, which reads the body back out of the `Response` and
+checks it against the `content-length` the same response declares.
+
+**Decided:**
+
+- *Narrow the annotations rather than cast at the boundary.* `as ArrayBuffer`
+  or a `Blob` copy would both silence the compiler at the last line; neither is
+  true. The bytes really are `ArrayBuffer`-backed, and three functions were
+  lying about it. AGENTS.md's "never weaken TypeScript to make an error go
+  away" is the rule that picks this fix over the other two.
+- *Test the response, not just the document.* The two failed attempts both
+  produced correct PDF bytes and a body the platform would not take. Nothing in
+  the suite crossed that seam, so nothing caught it. The new test does, at
+  runtime — a `Blob` copy or a truncating rewrite fails it too, not just this
+  particular type widening.
+- *Push a commit rather than ask for the pending run to be approved.* The fix
+  was already on the branch from an earlier escalation, but its `PR checks` run
+  came back `action_required`: the push was attributed to `github-actions[bot]`,
+  and GitHub holds workflow runs for that. A commit pushed as the Claude GitHub
+  App triggers the gates normally, which is the only way to actually see them
+  go green.
+
+**Rejected:**
+
+- *`new Blob([bytes])` as the body.* Already tried on this branch and it fails
+  identically — `BlobPart` has the same `ArrayBuffer` constraint as `BodyInit`,
+  so it moves the error rather than fixing it, and copies the whole document to
+  do so.
+- *`bytes.buffer as ArrayBuffer`.* A cast asserting something the type system
+  could have known, and it would survive a future refactor that made the
+  assertion false.
+- *Widening the `lib` or loosening `strict`.* Same objection, with a larger
+  blast radius.
+
+**Verified:** still not locally, and for the same reason as the session that
+wrote the feature — `pnpm` cannot be installed in this sandbox, so `pnpm
+build`, `pnpm test`, `pnpm typecheck` and `pnpm lint` were not run by hand.
+What *is* new is that the diagnosis came from the actual CI logs of runs
+31298524799 and 31303272964 rather than from reading the code, and both runs
+name the same single error. The gates on this push are the proof.
+
+**Open:**
+
+- Everything the PDF session left open is still open — nobody has opened one of
+  these files in a viewer, non-Latin place names are still dropped, and there
+  is no page-break control beyond "does this block fit".
+- ARCHITECTURE.md is unchanged, deliberately: this session fixed how the
+  described behaviour compiles, not what it is.

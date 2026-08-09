@@ -3,7 +3,8 @@ import type { Itinerary } from "@/ai/itinerary"
 import { budgetTotal, dayEffortMinutes } from "@/ai/itinerary"
 import { Bookings } from "@/components/bookings"
 import { BudgetTable } from "@/components/budget-table"
-import { Badge, DayBadges, minutes, money, Timeline } from "@/components/timeline"
+import { Badge, DayBadges, Timeline } from "@/components/timeline"
+import { minutes, money } from "@/lib/format"
 import { TripMap } from "@/components/trip-map"
 
 /**
@@ -56,6 +57,18 @@ export function ItineraryView({
             {TAB_LABEL[name]}
           </Link>
         ))}
+
+        {/*
+          A plain anchor, not next/link: this is a file, and the browser's own
+          download machinery handles it without a line of JavaScript. It sits
+          with the tabs because it is the same question — "how do I want to
+          look at this trip?" — and it follows `basePath`, so the shared copy
+          downloads through the share token rather than a route its reader
+          cannot open.
+        */}
+        <a className="tab tab-download" href={`${basePath}/itinerary.pdf`}>
+          Download PDF
+        </a>
       </nav>
 
       {tab === "itinerary" ? (
