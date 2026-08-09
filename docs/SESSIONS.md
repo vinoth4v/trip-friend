@@ -118,3 +118,52 @@ is not "sharing is broken" but "the exemption is wider than intended".
 - Unmeasured: how good the itineraries actually are. Every judgement in
   `prompts.ts` — group by geography, day one is arrival, build in rest — is
   asserted, not tested. The first real trip planned with this is the test.
+
+---
+
+## The README front door
+
+**Asked:** issue #6, "improve the Readme file in Github for this project" —
+plus the marketplace's standing instructions to put the app at `/` (already
+true, not a placeholder — see below) and to keep this document and
+ARCHITECTURE.md current.
+
+**Changed:** rewrote `README.md`. It was six lines beside a 200-line
+architecture doc — accurate but not a front door: no list of what actually
+works, nothing to tell a reader whether this is a scaffold or a finished MVP.
+The new version leads with what the app does, gives an explicit "what works
+today" / "what doesn't yet" split (lifted from ARCHITECTURE.md's own surfaces
+and known-gaps sections, so the two documents can't quietly disagree), keeps
+the local setup and env var walkthrough, adds the check commands from
+AGENTS.md, and links out to AGENTS.md, ARCHITECTURE.md and this file rather
+than duplicating their content.
+
+**Decided:**
+
+- *Checked `/` before touching the README.* The issue's marketplace boilerplate
+  says to replace the placeholder home page. It was already replaced — issue
+  #1's MVP session put the real hero, "Plan my trip" button and trip list
+  there. Re-confirmed by reading `apps/web/src/app/page.tsx` rather than
+  trusting ARCHITECTURE.md's description of it. No home page change was made.
+- *No ARCHITECTURE.md change.* Its surfaces table and known-gaps section were
+  checked against the current route tree (`find apps/web/src/app -type d`)
+  and still match exactly — nothing about the app's shape moved since the MVP
+  session, so rewriting it would be motion without content.
+- *README summarises rather than re-explains.* The "what works" list is a
+  compressed version of ARCHITECTURE.md's surfaces and decisions, not a new
+  description — a reader who wants the why is one link away, and there is
+  only one place that owns the reasoning.
+
+**Rejected:**
+
+- *Screenshots or a GIF in the README.* Would need a running instance with
+  seeded data to capture, and nothing in this session touched the UI to
+  justify producing one.
+
+**Verified:** no application code changed — only Markdown. Could not run
+`pnpm typecheck` / `pnpm build` / `pnpm lint` locally in this session (no
+network access to install dependencies); the PR's own `typecheck` and `build`
+gates cover it before merge.
+
+**Open:** everything already open in the prior entry — this session touched
+documentation only.
