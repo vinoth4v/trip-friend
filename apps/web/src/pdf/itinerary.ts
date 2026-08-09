@@ -23,7 +23,7 @@ import { INK, MARGIN, PdfWriter } from "@/pdf/document"
 
 const TIME_COLUMN = 46
 
-export function itineraryPdf(itinerary: Itinerary): Uint8Array {
+export function itineraryPdf(itinerary: Itinerary): Uint8Array<ArrayBuffer> {
   const writer = new PdfWriter(itinerary.title)
   const currency = itinerary.budget.currency
 

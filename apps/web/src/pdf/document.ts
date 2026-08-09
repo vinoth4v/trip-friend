@@ -213,7 +213,7 @@ export class PdfWriter {
    * of 11" is not knowable until the last page is written — and a printed
    * itinerary that has lost a page should be able to say so.
    */
-  build(): Uint8Array {
+  build(): Uint8Array<ArrayBuffer> {
     // An empty page is dropped rather than printed: `ensure` breaks the page
     // before drawing, so a trailing blank one means the document ended exactly
     // at a break, not that a page is missing. A document with nothing in it at
@@ -279,7 +279,7 @@ function footer(page: number, total: number): string {
 
 /** One character, one byte — which holds because every string written into the
  * file either went through `encodeWinAnsi` or is ASCII structure. */
-function toBytes(file: string): Uint8Array {
+function toBytes(file: string): Uint8Array<ArrayBuffer> {
   const bytes = new Uint8Array(file.length)
   for (let index = 0; index < file.length; index += 1) bytes[index] = file.charCodeAt(index) & 0xff
   return bytes
