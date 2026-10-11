@@ -25,5 +25,5 @@ export default NextAuth(authConfig).auth
  * valid token is a 404, not a listing.
  */
 export const config = {
-  matcher: ["/((?!api/auth|login|s/|_next/static|_next/image|favicon.ico|icon.svg).*)"],
+  matcher: ["/((?!api/auth|login|s/|_next/static|_next/image|favicon.ico|icon.svg|werft-commit.txt).*)"],
 }
