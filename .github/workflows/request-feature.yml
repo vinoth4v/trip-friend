@@ -73,7 +73,7 @@ jobs:
             printf 'Requested from the Werft marketplace.\n\n'
             printf 'Work on a branch and open a pull request — never push to `main`.\n'
             printf 'If this needs a schema change, add a Drizzle migration rather than\n'
-            printf 'editing an applied one; the PR gets its own Neon branch to prove it\n'
+            printf 'editing an applied one; the PR preview runs it on a copy of the production database to prove it\n'
             printf 'against. All five checks must pass, and a human merges.\n\n'
             printf 'Before opening the PR, update `docs/ARCHITECTURE.md` to describe the app\n'
             printf 'as it now is, and append an entry to `docs/SESSIONS.md` saying what was\n'
